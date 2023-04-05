@@ -2,11 +2,14 @@ const dotenv = require("dotenv");
 const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
-const mongoose = require("mongoose");
+
+const connectToDb = require("./db/connectToDb");
+const errorMiddleware = require("./middlewares/error");
 
 dotenv.config();
 
 const PORT = process.env.PORT || 5000;
+
 const app = express();
 
 app.use(express.json());
@@ -20,16 +23,21 @@ app.use(
   }),
 );
 
+app.use((req, res) => {
+  return res.status(404).json({
+    message: "Endpoint not found",
+  });
+});
+
+app.use(errorMiddleware);
+
 const start = async () => {
   try {
-    await mongoose.connect(process.env.DB_URL, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-    
+    await connectToDb();
+
     app.listen(PORT, () => console.log(`Server started on PORT = ${PORT}`));
-  } catch (e) {
-    console.log(e);
+  } catch (error) {
+    console.error(error);
   }
 };
 
