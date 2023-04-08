@@ -4,6 +4,7 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 
 const connectToDb = require("./db/connectToDb");
+const router = require("./routes/index");
 const errorMiddleware = require("./middlewares/error");
 
 dotenv.config();
@@ -22,6 +23,8 @@ app.use(
     origin: process.env.CLIENT_URL,
   }),
 );
+
+app.use("/api", router);
 
 app.use((req, res) => {
   return res.status(404).json({
