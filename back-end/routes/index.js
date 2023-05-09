@@ -7,9 +7,18 @@ const activateEmail = require("../controllers/activateEmail");
 const refresh = require("../controllers/refresh");
 const getUsers = require("../controllers/getUsers");
 
+const registrationValidation = require("../validation/registration");
+const validationMiddleware = require("../middlewares/validation");
+
 const router = new Router();
 
-router.post("/register", register);
+router.post(
+  "/register",
+  registrationValidation,
+  validationMiddleware,
+  register,
+);
+
 router.post("/login", login);
 router.post("/logout", logout);
 router.get("/activate-email/:link", activateEmail);

@@ -3,7 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 
-const connectToDb = require("./db/connectToDb");
+const connectToDb = require("./db/connect");
 const router = require("./routes/index");
 const errorMiddleware = require("./middlewares/error");
 
