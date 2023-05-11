@@ -4,6 +4,9 @@ const generateTokens = require("../services/token/generateTokens");
 const sendActivationEmail = require("../services/sendActivationEmail");
 const createUser = require("../db/user/createUser");
 const findUser = require("../db/user/findUser");
+const saveToken = require("../db/tokens/saveToken");
+
+const ONE_MONTH_IN_MILLISECONDS = 30 * 24 * 60 * 60 * 1000;
 
 const register = async (req, res, next) => {
   try {
@@ -15,7 +18,7 @@ const register = async (req, res, next) => {
       throw new Error(`User with email ${email} already exists`);
     }
 
-    const hashPassword = await bcrypt.hash(password, 3);
+    const hashPassword = await bcrypt.hash(password, 10);
 
     const activationId = uuid.v4();
 
@@ -35,7 +38,7 @@ const register = async (req, res, next) => {
     await saveToken(userPayload.id, tokens.refreshToken);
 
     res.cookie("refreshToken", tokens.refreshToken, {
-      maxAge: 30 * 24 * 60 * 60 * 1000,
+      maxAge: ONE_MONTH_IN_MILLISECONDS,
       httpOnly: true,
     });
 
