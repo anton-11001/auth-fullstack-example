@@ -1,11 +1,7 @@
 const UserModel = require("../../models/user");
 
-const createUser = async (email, hashPassword, activationLink) => {
-  return await UserModel.create({
-    email,
-    password: hashPassword,
-    activationLink,
-  });
+const createUser = async (user) => {
+  return await UserModel.create(user);
 };
 
 module.exports = createUser;
