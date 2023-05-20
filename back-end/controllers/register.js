@@ -10,7 +10,7 @@ const ONE_MONTH_IN_MILLISECONDS = 30 * 24 * 60 * 60 * 1000;
 
 const register = async (req, res, next) => {
   try {
-    const { email, password } = req.body;
+    const { name, email, password } = req.body;
 
     const candidate = await findUser(email);
 
@@ -22,15 +22,23 @@ const register = async (req, res, next) => {
 
     const activationId = uuid.v4();
 
-    const activationLink = `${process.env.API_URL}/api/activate/${activationId}`;
+    const emailVerificationLink = `${process.env.API_URL}/api/activate/${activationId}`;
 
-    const user = await createUser(email, hashPassword, activationLink);
+    const newUser = {
+      name,
+      email,
+      password: hashPassword,
+      emailVerificationLink,
+    };
 
-    await sendActivationEmail(email, activationLink);
+    const user = await createUser(newUser);
+
+    await sendActivationEmail(email, emailVerificationLink);
 
     const userPayload = {
       id: user._id,
       email: user.email,
+      name: user.name,
     };
 
     const tokens = generateTokens(userPayload);
