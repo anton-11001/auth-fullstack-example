@@ -15,7 +15,9 @@ const register = async (req, res, next) => {
     const candidate = await findUser(email);
 
     if (candidate) {
-      throw new Error(`User with email ${email} already exists`);
+      const error = new Error(`User with email ${email} already exists`);
+      error.status = 400;
+      throw error;
     }
 
     const hashPassword = await bcrypt.hash(password, 10);
