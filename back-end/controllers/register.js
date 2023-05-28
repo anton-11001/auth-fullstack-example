@@ -52,7 +52,12 @@ const register = async (req, res, next) => {
       httpOnly: true,
     });
 
-    return res.json(userPayload);
+    const response = {
+      accessToken: tokens.accessToken,
+      user: userPayload,
+    };
+
+    return res.status(201).json(response);
   } catch (error) {
     next(error);
   }
