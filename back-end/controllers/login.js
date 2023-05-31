@@ -1,3 +1,55 @@
-const login = (req, res, next) => {};
+const bcrypt = require("bcrypt");
+
+const generateTokens = require("../services/token/generateTokens");
+const findUser = require("../db/user/findUser");
+const saveToken = require("../db/tokens/saveToken");
+
+const ONE_MONTH_IN_MILLISECONDS = 30 * 24 * 60 * 60 * 1000;
+
+const login = async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
+
+    const candidate = await findUser(email);
+
+    if (!candidate) {
+      const error = new Error(`User with email ${email} not found`);
+      error.status = 400;
+      throw error;
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, candidate.password);
+
+    if (!isPasswordValid) {
+      const error = new Error("Invalid email or password");
+      error.status = 400;
+      throw error;
+    }
+
+    const userPayload = {
+      id: candidate._id,
+      email: candidate.email,
+      name: candidate.name,
+    };
+
+    const tokens = generateTokens(userPayload);
+
+    await saveToken(userPayload.id, tokens.refreshToken);
+
+    res.cookie("refreshToken", tokens.refreshToken, {
+      maxAge: ONE_MONTH_IN_MILLISECONDS,
+      httpOnly: true,
+    });
+
+    const response = {
+      accessToken: tokens.accessToken,
+      user: userPayload,
+    };
+
+    return res.status(200).json(response);
+  } catch (error) {
+    next(error);
+  }
+};
 
 module.exports = login;
