@@ -8,7 +8,10 @@ const refresh = require("../controllers/refresh");
 const getUsers = require("../controllers/getUsers");
 
 const registrationValidation = require("../validation/registration");
+const loginValidation = require("../validation/login");
+
 const validationMiddleware = require("../middlewares/validation");
+const authMiddleware = require("../middlewares/auth");
 
 const router = new Router();
 
@@ -19,10 +22,10 @@ router.post(
   register,
 );
 
-router.post("/login", login);
-router.post("/logout", logout);
+router.post("/login", loginValidation, validationMiddleware, login);
+router.post("/logout", authMiddleware, logout);
 router.get("/activate-email/:link", activateEmail);
 router.get("/refresh", refresh);
-router.get("/users", getUsers);
+router.get("/users", authMiddleware, getUsers);
 
 module.exports = router;
