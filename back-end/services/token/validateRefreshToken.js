@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 
-const validateRefreshToken = (payload) => {
+const validateRefreshToken = (token) => {
   try {
     return jwt.verify(token, process.env.JWT_REFRESH_SECRET);
   } catch (error) {
