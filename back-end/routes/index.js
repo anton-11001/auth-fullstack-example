@@ -3,7 +3,7 @@ const Router = require("express").Router;
 const register = require("../controllers/register");
 const login = require("../controllers/login");
 const logout = require("../controllers/logout");
-const activateEmail = require("../controllers/activateEmail");
+const verifyEmail = require("../controllers/verifyEmail");
 const refresh = require("../controllers/refresh");
 const getUsers = require("../controllers/getUsers");
 
@@ -24,7 +24,7 @@ router.post(
 
 router.post("/login", loginValidation, validationMiddleware, login);
 router.post("/logout", authMiddleware, logout);
-router.get("/activate-email/:link", activateEmail);
+router.get("/verify-email/:emailVerificationId", verifyEmail);
 router.get("/refresh", refresh);
 router.get("/users", authMiddleware, getUsers);
 
