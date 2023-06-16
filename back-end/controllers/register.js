@@ -22,18 +22,18 @@ const register = async (req, res, next) => {
 
     const hashPassword = await bcrypt.hash(password, 10);
 
-    const activationId = uuid.v4();
-
-    const emailVerificationLink = `${process.env.API_URL}/api/activate/${activationId}`;
+    const emailVerificationId = uuid.v4();
 
     const newUser = {
       name,
       email,
       password: hashPassword,
-      emailVerificationLink,
+      emailVerificationId,
     };
 
     const user = await createUser(newUser);
+
+    const emailVerificationLink = `${process.env.API_URL}/api/activate/${emailVerificationId}`;
 
     await sendActivationEmail(email, emailVerificationLink);
 
