@@ -1,7 +1,7 @@
 const bcrypt = require("bcrypt");
 const uuid = require("uuid");
 const generateTokens = require("../services/token/generateTokens");
-const sendActivationEmail = require("../services/sendActivationEmail");
+const sendVerificationEmail = require("../services/sendVerificationEmail");
 const createUser = require("../db/user/createUser");
 const findUser = require("../db/user/findUser");
 const saveToken = require("../db/tokens/saveToken");
@@ -33,9 +33,9 @@ const register = async (req, res, next) => {
 
     const user = await createUser(newUser);
 
-    const emailVerificationLink = `${process.env.API_URL}/api/activate/${emailVerificationId}`;
+    const emailVerificationLink = `${process.env.API_URL}/api/verify-email/${emailVerificationId}`;
 
-    await sendActivationEmail(email, emailVerificationLink);
+    await sendVerificationEmail(email, emailVerificationLink);
 
     const userPayload = {
       id: user._id,
