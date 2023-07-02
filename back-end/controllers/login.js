@@ -1,10 +1,9 @@
 const bcrypt = require("bcrypt");
 
 const generateTokens = require("../services/token/generateTokens");
+const setupRefreshToken = require("../services/token/setupRefreshToken");
 const findUser = require("../db/user/findUser");
 const saveToken = require("../db/tokens/saveToken");
-
-const ONE_MONTH_IN_MILLISECONDS = 30 * 24 * 60 * 60 * 1000;
 
 const login = async (req, res, next) => {
   try {
@@ -36,10 +35,7 @@ const login = async (req, res, next) => {
 
     await saveToken(userPayload.id, tokens.refreshToken);
 
-    res.cookie("refreshToken", tokens.refreshToken, {
-      maxAge: ONE_MONTH_IN_MILLISECONDS,
-      httpOnly: true,
-    });
+    setupRefreshToken(res, tokens.refreshToken);
 
     const response = {
       accessToken: tokens.accessToken,
