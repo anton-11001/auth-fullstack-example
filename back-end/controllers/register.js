@@ -1,12 +1,11 @@
 const bcrypt = require("bcrypt");
 const uuid = require("uuid");
 const generateTokens = require("../services/token/generateTokens");
+const setupRefreshToken = require("../services/token/setupRefreshToken");
 const sendVerificationEmail = require("../services/sendVerificationEmail");
 const createUser = require("../db/user/createUser");
 const findUser = require("../db/user/findUser");
 const saveToken = require("../db/tokens/saveToken");
-
-const ONE_MONTH_IN_MILLISECONDS = 30 * 24 * 60 * 60 * 1000;
 
 const register = async (req, res, next) => {
   try {
@@ -47,10 +46,7 @@ const register = async (req, res, next) => {
 
     await saveToken(userPayload.id, tokens.refreshToken);
 
-    res.cookie("refreshToken", tokens.refreshToken, {
-      maxAge: ONE_MONTH_IN_MILLISECONDS,
-      httpOnly: true,
-    });
+    setupRefreshToken(res, tokens.refreshToken);
 
     const response = {
       accessToken: tokens.accessToken,
