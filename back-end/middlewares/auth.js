@@ -1,10 +1,5 @@
 const validateAccessToken = require("../services/token/validateAccessToken");
-
-const throwUnauthorizedError = () => {
-  const error = new Error("Unauthorized");
-  error.status = 401;
-  throw error;
-};
+const throwUnauthorizedError = require("../services/throwUnauthorizedError");
 
 const authMiddleware = async (req, res, next) => {
   try {
