@@ -205,11 +205,11 @@ If the user is not found or the password is invalid, the backend returns a `400`
 Current expiration values:
 
 ```js
-accessToken: "15s"
-refreshToken: "30s"
+accessToken: "15m"
+refreshToken: "30d"
 ```
 
-These short lifetimes are useful for testing refresh behavior. For a real application, they should usually be increased.
+The access token is intentionally short-lived, while the refresh token lasts longer and matches the refresh-token cookie lifetime.
 
 `setupRefreshToken()` writes the refresh token to an HTTP-only cookie:
 
