@@ -1,4 +1,5 @@
 const findUserById = require("../db/user/findUserById");
+const UserDto = require("../dtos/user");
 
 const getUserById = async (req, res, next) => {
   try {
@@ -12,7 +13,7 @@ const getUserById = async (req, res, next) => {
       throw error;
     }
 
-    return res.json(user);
+    return res.json(new UserDto(user));
   } catch (error) {
     next(error);
   }
