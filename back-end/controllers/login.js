@@ -4,6 +4,7 @@ const generateTokens = require("../services/token/generateTokens");
 const setupRefreshToken = require("../services/token/setupRefreshToken");
 const findUser = require("../db/user/findUser");
 const saveToken = require("../db/tokens/saveToken");
+const UserDto = require("../dtos/user");
 
 const login = async (req, res, next) => {
   try {
@@ -25,11 +26,7 @@ const login = async (req, res, next) => {
       throw error;
     }
 
-    const userPayload = {
-      id: candidate._id,
-      email: candidate.email,
-      name: candidate.name,
-    };
+    const userPayload = new UserDto(candidate);
 
     const tokens = generateTokens(userPayload);
 
