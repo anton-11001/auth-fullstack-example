@@ -3,7 +3,9 @@ const validateRefreshToken = require("../services/token/validateRefreshToken");
 const findToken = require("../db/tokens/findToken");
 const findUserById = require("../db/user/findUserById");
 const generateTokens = require("../services/token/generateTokens");
+const setupRefreshToken = require("../services/token/setupRefreshToken");
 const saveToken = require("../db/tokens/saveToken");
+const UserDto = require("../dtos/user");
 
 const refresh = async (req, res, next) => {
   try {
@@ -33,10 +35,12 @@ const refresh = async (req, res, next) => {
       throwUnauthorizedError();
     }
 
-    const { accessToken, refreshToken: newRefreshToken } =
-      generateTokens(userPayload);
+    const freshUserPayload = new UserDto(user);
 
-    await saveToken(userPayload.id, newRefreshToken);
+    const { accessToken, refreshToken: newRefreshToken } =
+      generateTokens(freshUserPayload);
+
+    await saveToken(freshUserPayload.id, newRefreshToken);
 
     setupRefreshToken(res, newRefreshToken);
 
