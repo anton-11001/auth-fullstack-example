@@ -6,6 +6,7 @@ const sendVerificationEmail = require("../services/sendVerificationEmail");
 const createUser = require("../db/user/createUser");
 const findUser = require("../db/user/findUser");
 const saveToken = require("../db/tokens/saveToken");
+const UserDto = require("../dtos/user");
 
 const register = async (req, res, next) => {
   try {
@@ -36,11 +37,7 @@ const register = async (req, res, next) => {
 
     await sendVerificationEmail(email, emailVerificationLink);
 
-    const userPayload = {
-      id: user._id,
-      email: user.email,
-      name: user.name,
-    };
+    const userPayload = new UserDto(user);
 
     const tokens = generateTokens(userPayload);
 
