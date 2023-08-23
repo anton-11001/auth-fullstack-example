@@ -87,7 +87,6 @@ The backend uses small database helper modules instead of querying models direct
 - `db/user/createUser.js` creates a user.
 - `db/user/findUser.js` finds a user by email.
 - `db/user/findUserById.js` finds a user by MongoDB id.
-- `db/user/getUsers.js` returns all users.
 - `db/tokens/saveToken.js` creates or updates a user's refresh token.
 - `db/tokens/findToken.js` finds a refresh token in the database.
 - `db/tokens/deleteToken.js` removes a refresh token during logout.
@@ -133,15 +132,15 @@ Each token document links a refresh token to a user. `saveToken()` updates the e
 
 All backend routes are mounted under `/api`.
 
-| Method | Route | Protected | Description |
-| --- | --- | --- | --- |
-| `POST` | `/api/register` | No | Creates a user, sends verification email, returns access token and user payload. |
-| `POST` | `/api/login` | No | Validates credentials, returns access token and user payload. |
-| `POST` | `/api/logout` | Yes | Deletes the current refresh token and clears the refresh-token cookie. |
-| `GET` | `/api/verify-email/:emailVerificationId` | No | Marks the matching user email as verified and redirects to the client. |
-| `GET` | `/api/refresh` | No | Validates the refresh-token cookie and issues a new access token. |
-| `GET` | `/api/users` | Yes | Returns all users. |
-| `GET` | `/api/users/:id` | Yes | Returns one user by id. |
+| Method | Route                                    | Protected | Description                                                                      |
+| ------ | ---------------------------------------- | --------- | -------------------------------------------------------------------------------- |
+| `POST` | `/api/register`                          | No        | Creates a user, sends verification email, returns access token and user payload. |
+| `POST` | `/api/login`                             | No        | Validates credentials, returns access token and user payload.                    |
+| `POST` | `/api/logout`                            | Yes       | Deletes the current refresh token and clears the refresh-token cookie.           |
+| `GET`  | `/api/verify-email/:emailVerificationId` | No        | Marks the matching user email as verified and redirects to the client.           |
+| `GET`  | `/api/refresh`                           | No        | Validates the refresh-token cookie and issues a new access token.                |
+| `GET`  | `/api/users`                             | Yes       | Returns all users.                                                               |
+| `GET`  | `/api/users/:id`                         | Yes       | Returns one user by id.                                                          |
 
 Protected routes use `authMiddleware`, which expects an access token in the `Authorization` header:
 
@@ -205,8 +204,8 @@ If the user is not found or the password is invalid, the backend returns a `400`
 Current expiration values:
 
 ```js
-accessToken: "15m"
-refreshToken: "30d"
+accessToken: "15m";
+refreshToken: "30d";
 ```
 
 The access token is intentionally short-lived, while the refresh token lasts longer and matches the refresh-token cookie lifetime.

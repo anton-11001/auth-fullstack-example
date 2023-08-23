@@ -5,7 +5,6 @@ const login = require("../controllers/login");
 const logout = require("../controllers/logout");
 const verifyEmail = require("../controllers/verifyEmail");
 const refresh = require("../controllers/refresh");
-const getUsers = require("../controllers/getUsers");
 const getUserById = require("../controllers/getUserById");
 
 const registrationValidation = require("../validation/registration");
@@ -30,8 +29,6 @@ router.post("/logout", authMiddleware, logout);
 router.get("/verify-email/:emailVerificationId", verifyEmail);
 
 router.get("/refresh", refresh);
-
-router.get("/users", authMiddleware, getUsers);
 
 router.get("/users/:id", authMiddleware, getUserById);
 
