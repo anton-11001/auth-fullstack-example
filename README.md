@@ -410,3 +410,276 @@ POST /api/logout
 Authorization: Bearer <accessToken>
 Cookie: refreshToken=<refreshToken>
 ```
+
+## Front-end Implementation plan
+
+## Phase 1: Task Decomposition
+
+### 1. Networking & API Layer
+
+- **Axios Configuration:** Setup base instance with `withCredentials: true`.
+- **Intercept Management:** Logic to catch 401s, trigger the `/refresh` endpoint, and retry failed requests.
+- **API Contracts:** TypeScript interfaces mapping exactly to the backend responses.
+
+### 2. Authentication State Management
+
+- **Auth Provider:** A React Context to manage `user` data and `isAuth` status.
+- **Initialization Logic:** Checking for an existing session on app load (silent refresh).
+
+### 3. Logic & Data Fetching (TanStack Query)
+
+- **Auth Hooks:** Custom hooks for `useLogin`, `useRegister`, and `useLogout`.
+- **User Hooks:** Hooks to fetch the protected `/users` list.
+
+### 4. Routing & Protection
+
+- **Private Route Wrapper:** Component to guard sensitive routes.
+- **Public Route Wrapper:** Prevents logged-in users from seeing the Login/Register pages.
+
+### 5. UI Components & Forms
+
+- **Form Validation:** Using Zod for schema validation (matching backend `express-validator` rules).
+- **Pages:** Login, Registration, Dashboard (User List), and Email Verification Success landing page.
+
+React Hook Form reduces the amount of code you need to write while removing unnecessary re-renders. Now dive in and explore with the following example:
+
+```
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import Header from "./Header";
+
+export function App() {
+  const { register, handleSubmit } = useForm();
+  const [data, setData] = useState("");
+
+  return (
+    <form onSubmit={handleSubmit((data) => setData(JSON.stringify(data)))}>
+      <Header />
+      <input {...register("firstName")} placeholder="First name" />
+      <select {...register("category", { required: true })}>
+        <option value="">Select...</option>
+        <option value="A">Option A</option>
+        <option value="B">Option B</option>
+      </select>
+      <textarea {...register("aboutYou")} placeholder="About you" />
+      <p>{data}</p>
+      <input type="submit" />
+    </form>
+  );
+}
+```
+
+---
+
+## Phase 2: Low-Level Design (LLD)
+
+### 1. Networking Layer (Axios Interceptors)
+
+This is the "heart" of your auth flow. It ensures the UI doesn't break when the 15-minute access token expires.
+
+- **Data Structures:**
+
+```typescript
+interface AuthResponse {
+  accessToken: string;
+  user: User;
+}
+```
+
+- **Logic Flow:**
+
+1. Create an Axios instance `api`.
+2. **Request Interceptor:** Attach `Authorization: Bearer <token>` from local state.
+3. **Response Interceptor:**
+
+- If response is `2xx`, return data.
+- If `401` AND `!originalRequest._retry`:
+- Set `_retry = true`.
+- Call `GET /api/refresh`.
+- Store new `accessToken`.
+- Retry the `originalRequest` with the new token.
+
+- **Error Handling:** If `/refresh` also returns `401`, clear local state and redirect to `/login`.
+
+```
+export const API_URL = `http://localhost:5000/api`
+
+const api = axios.create({
+    withCredentials: true,
+    baseURL: API_URL
+})
+
+api.interceptors.request.use((config) => {
+    config.headers.Authorization = `Bearer ${localStorage.getItem('token')}`
+    return config;
+})
+
+api.interceptors.response.use((config) => {
+    return config;
+},async (error) => {
+    const originalRequest = error.config;
+    if (error.response.status == 401 && error.config && !error.config._isRetry) {
+        originalRequest._isRetry = true;
+        try {
+            const response = await axios.get<AuthResponse>(`${API_URL}/refresh`, {withCredentials: true})
+            localStorage.setItem('token', response.data.accessToken);
+            return api.request(originalRequest);
+        } catch (e) {
+            // handle error
+        }
+    }
+    throw error;
+})
+
+export default api;
+```
+
+### 2. Authentication Context (Auth Service)
+
+- **Data Structures:**
+
+```typescript
+interface AuthContextType {
+  user: User | null;
+  isAuth: boolean;
+}
+```
+
+- **Logic Flow (checkAuth):**
+
+1. On App mount, call `useRefresh()`.
+2. If successful, update `user` state and store `accessToken` in memory.
+3. Set `isLoading` to false only after this check completes.
+
+### 3. Form Validation (Zod Schemas)
+
+To prevent unnecessary API calls and match backend constraints.
+
+- **Logic:**
+- `RegisterSchema`: `name` (2-100 chars), `email` (valid format), `password` (3-32 chars).
+- `LoginSchema`: `email` (valid format), `password` (required).
+
+- **Error Handling:** Use Zod's `safeParse` to display real-time inline errors to the user before the "Submit" button is enabled.
+
+### 4. Routing Architecture
+
+- **Components:**
+- `<ProtectedRoute />`: Checks `isAuth`. If false, redirects to `/login`.
+- `<PublicRoute />`: Checks `isAuth`. If true, redirects to `/dashboard`.
+
+- **Dependencies:** React Router Dom (v6+ recommended) and the `AuthContext`.
+
+### 5. Logic Layer (TanStack Query Integration)
+
+- **Task:** Wrap Axios calls in `useMutation` and `useQuery`.
+- **Logic:**
+- `useLogin`: On `onSuccess`, update `AuthContext` state.
+- `useUsers`: Fetch `/api/users`. Enable only if `isAuth` is true.
+
+- **Edge Case:** If the user opens multiple tabs and logs out in one, TanStack Query should trigger a refetch or the interceptor should catch the `401` in the second tab.
+
+---
+
+## Recommended Project Structure
+
+## src/
+
+### api/
+
+Global infrastructure for network requests and server state.
+
+- **endpoints.ts**: Centralized ENDPOINTS object serving as the single source of truth for all API URLs.
+
+### lib/
+
+Third-party library configurations.
+
+**axios/** folder. Centralized API client configuration and network logic.
+
+- **instance.ts**: Axios configuration including base URL, auth headers, interceptors, 401 Unauthorized handling, and silent token refresh logic.
+
+- **interceptors/**: Separated request/response interceptor logic.
+
+- **types.ts**: Axios-specific internal typings.
+
+**tanstack-query/** folder. Server state management and caching configuration.
+
+- **query-client.ts**: Global TanStack Query client configuration.
+
+- **query-keys.ts**: Static constants for TanStack Query cache keys to ensure consistent data invalidation.
+
+- **types.ts**: Shared TanStack Query utility typings.
+
+### router/
+
+Application navigation and routing logic.
+
+- **paths.ts**: Route path constants used throughout the app (e.g., PATHS.auth.login).
+- **index.tsx**: Main RouterProvider setup and route tree definitions.
+- **components/**: Route guards including ProtectedRoute for authenticated sessions and PublicRoute for guest access, plus Layout wrappers.
+
+### features/
+
+Business logic organized into horizontal modules. Each subdirectory represents a self-contained domain.
+
+- **[feature-name]/** (e.g., auth, billing)
+- **api/**: Pure Axios or Fetch functions (e.g., getProfile, updateBilling) plus a file with type definitions for feature-specific requests and responses.
+- **types/**: Feature-local UI or internal types.
+- **constants/**: Domain-specific configuration.
+- **hooks/**: React hooks.
+- **services/**: Sometimes you have complex logic that isn't a Hook or a Component. Local utility functions (e.g., formatCurrencyForBilling, calculateAuthStrength).
+- **queries/**: TanStack Query hooks.
+- **components/**: Private components used exclusively within this specific feature.
+- **pages/**: Feature-level screens and page components.
+- **validation/**: Zod schemas or validation rules for feature forms.
+- **index.tsx**: It acts as a gatekeeper. You export only what the rest of the app is allowed to see.
+
+### components/
+
+Shared UI-KIT components.
+
+Will have a ui/ folder for Atomic, stateless components such as Button, Input, Modal, and Badge and layout folder for complex shared components used across features, such as AppHeader or Sidebar.
+
+### contexts/
+
+Global React Context providers.
+
+### hooks/
+
+Global, reusable custom React hooks.
+
+### utils/
+
+Pure helper functions and utilities.
+
+### theme/
+
+Global styling configuration and design system tokens. (colors, breakpoints or Tailwind configuration etc.)
+
+### types/
+
+Global TypeScript declarations for domain models.
+
+### **constants.tsx**:
+
+For things like APP_TITLE, SUPPORT_EMAIL, or global pagination defaults that aren't specific to a feature.
+
+### errors/
+
+Centralized application error handling.
+
+- **api-error.ts**: API error normalization.
+- **error-codes.ts**: Shared application error codes.
+- **handlers/**: Global error handling utilities.
+- **boundaries/**: React Error Boundaries.
+
+### Entry Files
+
+- **main.tsx**: Application entry point for the build tool.
+- **App.tsx**: Root component containing the Provider tree (QueryClientProvider, AuthProvider, RouterProvider).
+
+### Critical Edge Cases to Handle:
+
+1. **Token Expired during a Bulk Request:** If the UI triggers 3 simultaneous API calls while the token is expired, ensure only **one** `/refresh` call is made (Request Queueing).
+2. **Email Verification Redirect:** The backend redirects to `CLIENT_URL`. The frontend must have a route handler that shows a "Verification Successful" message and prompts the user to login.
+3. **No Cookies Support:** If the browser blocks 3rd party cookies (though unlikely here as it's same-site), the refresh flow will fail. Ensure the UI shows a graceful "Session Expired" message.
