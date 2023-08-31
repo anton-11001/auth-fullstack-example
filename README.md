@@ -413,6 +413,65 @@ Cookie: refreshToken=<refreshToken>
 
 ## Front-end Implementation plan
 
+## Front-end Task List
+
+- [x] Write a CSS config with vars for colors, gaps...
+- [x] Configure environment variables for the frontend API base URL, for example `REACT_APP_API_URL=http://localhost:5000/api`.
+- [x] Create a shared Axios client with `baseURL`, `withCredentials: true`, and typed response handling.
+- [x] Add an Axios request interceptor that attaches the current access token to protected requests with `Authorization: Bearer <token>`.
+- [x] Add an Axios response interceptor that handles `401` responses, calls `/refresh`, saves the new access token, and retries the original request.
+- [x] Add refresh request queueing so multiple expired requests trigger only one `/refresh` call.
+- [x] Define shared TypeScript types for `User`, `AuthResponse`, API errors, login payloads, and registration payloads.
+- [x] Create endpoint constants for `/register`, `/login`, `/logout`, `/refresh`, `/users`, and `/users/:id`.
+- [x] Create an authentication service layer with `register`, `login`, `logout`, `refresh`, `getUsers`, and `getUserById` API functions. Every function in a separate file.
+- [x] Add TanStack Query configuration with a shared `QueryClient`, query keys, and default retry/error behavior.
+- [x] Create auth mutation hooks for registration, login, and logout.
+- [x] Create protected user query hooks for fetching the users list and a single user by id.
+- [x] Build an `AuthProvider` that stores the authenticated user, auth status, startup loading state, and access token handling.
+- [x] Add app initialization logic that silently calls `/refresh` on load to restore an existing cookie-based session.
+- [x] Implement logout cleanup that clears local auth state, removes the access token, and invalidates user-related queries.
+- [x] Configure React Router with route constants and a central route tree.
+- [x] Build `ProtectedRoute` to redirect guests away from authenticated pages.
+- [x] Build `PublicRoute` to redirect authenticated users away from login and registration pages.
+- [x] Create Zod schemas that match backend validation rules for registration and login.
+- [x] Build reusable form components such as `Button`, `Input`, `FormError`, and loading states.
+- [x] Implement the registration page with React Hook Form, Zod validation, API error display, and success feedback.
+- [x] Implement the login page with React Hook Form, Zod validation, API error display, and redirect after success.
+- [x] Implement the dashboard page that shows the authenticated user state.
+- [x] Implement the email verification success route that is shown after the backend redirects to `CLIENT_URL`.
+- [x] Add graceful session-expired handling when refresh fails or cookies are unavailable.
+- [x] Add loading screens for startup auth checks and protected route transitions.
+- [x] Add empty, error, and retry states for protected data views.
+- [ ] Test the full happy path: register, verify email, login, refresh token, view users, and logout.
+- [ ] Test failure paths: invalid form data, wrong credentials, expired access token, missing refresh cookie, and protected route access while logged out.
+- [x] Document frontend setup, environment variables, and run commands in the README.
+
+Note: the current backend exposes `GET /api/users/:id`, but not `GET /api/users`. The frontend includes a users-list query hook for the planned endpoint and uses the available protected user-by-id endpoint in the dashboard.
+
+### Running the Frontend
+
+From the frontend directory:
+
+```bash
+cd front-end
+npm install
+npm start
+```
+
+The frontend expects:
+
+```env
+REACT_APP_API_URL=http://localhost:5000/api
+```
+
+The app runs on:
+
+```text
+http://localhost:3000
+```
+
+The `start` and `build` scripts set `NODE_OPTIONS=--openssl-legacy-provider` through `cross-env` because this project uses React Scripts 4, which needs that compatibility flag on newer Node.js versions.
+
 ## Phase 1: Task Decomposition
 
 ### 1. Networking & API Layer
