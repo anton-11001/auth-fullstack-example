@@ -423,7 +423,7 @@ Cookie: refreshToken=<refreshToken>
 - [x] Add refresh request queueing so multiple expired requests trigger only one `/refresh` call.
 - [x] Define shared TypeScript types for `User`, `AuthResponse`, API errors, login payloads, and registration payloads.
 - [x] Create endpoint constants for `/register`, `/login`, `/logout`, `/refresh`, `/users`, and `/users/:id`.
-- [x] Create an authentication service layer with `register`, `login`, `logout`, `refresh`, `getUsers`, and `getUserById` API functions. Every function in a separate file.
+- [x] Create an authentication service layer with `register`, `login`, `logout`, `refresh`, and `getUserById` API functions. Every function in a separate file.
 - [x] Add TanStack Query configuration with a shared `QueryClient`, query keys, and default retry/error behavior.
 - [x] Create auth mutation hooks for registration, login, and logout.
 - [x] Create protected user query hooks for fetching the users list and a single user by id.
