@@ -2,7 +2,7 @@ const UserModel = require("../models/user");
 
 const verifyEmail = async (req, res, next) => {
   try {
-    const emailVerificationId = req.params.emailVerificationId;
+    const emailVerificationId = req.params.emailVerificationId.trim();
 
     const user = await UserModel.findOne({ emailVerificationId });
 
